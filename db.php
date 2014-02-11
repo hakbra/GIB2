@@ -1,4 +1,3 @@
-
 <?php
 class DatabaseWrapper {
   private $dbh;

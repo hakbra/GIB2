@@ -12,7 +12,7 @@ try {
 	if (!isset($_GET['method']))
 		throw new Exception( 'No method' );
 
-	$dw = new DatabaseWrapper( new PDO('mysql:host=129.241.124.148;dbname=gib', 'remote', 'pass'));
+	$dw = new DatabaseWrapper( new PDO('mysql:host=localhost;dbname=gib', 'remote', 'pass'));
 
 	switch( $_GET['method'] ) {
 		case 'getOne':
