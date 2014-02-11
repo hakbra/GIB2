@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Leaflet Test</title>
+		<meta charset="utf-8" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+		<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+
+		<link rel="stylesheet" href="style.css" />
+		<script src="js/leaflet_util.js"></script>
+		<script src="js/data.js"></script>
+	</head>
+	<body>
+		<div id="map" style="width: 800px; height: 800px"></div>
+
+		<script>
+			map = new L.Map('map');
+
+			var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+			var osmAttrib='Map data © OpenStreetMap contributors';
+			var osm = new L.TileLayer(osmUrl, 
+				{minZoom: 18, maxZoom: 22, maxNativeZoom: 19, attribution: osmAttrib});		
+
+			map.setView(new L.LatLng(63.41749, 10.404),18);
+			map.addLayer(osm);
+
+			d = new Data(map);
+			d.read();
+
+			map.addControl(Button(d.floorUp.bind(d), {'text':'Up'}));
+			map.addControl(Button(d.floorDown.bind(d), {'text':'Down'}));
+
+			map.on('click', d.addNode.bind(d));
+		</script>
+	</body>
+</html>
