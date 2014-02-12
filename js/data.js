@@ -26,9 +26,14 @@ function insert(sql) {
 
 // Line
 
-function Line(a, b) {
+function Line(a, b, dist) {
 	this.a = a;
 	this.b = b;
+	this.dist = dist;
+}
+
+Node.prototype.write = function() {
+	execute("INSERT INTO line (pos, floor, type) VALUES(" + this.a + "," + this.b + "," + this.dist + ")");
 }
 
 // Node
@@ -41,7 +46,7 @@ function Node(x, y, f, id) {
 	if (id == null)
 		this.write();
 	this.neighbours = new Array();
-	this.marker = L.marker([x, y], options={"id":this.id}).bindPopup(this.id);
+	this.marker = L.marker([x, y], options={"id":this.id}).bindPopup("Hello");
 }
 
 Node.prototype.write = function() {
@@ -58,6 +63,7 @@ function Data(map) {
 	this.maps = new Array();
 	this.nodes = new Object();
 	this.lines = new Array();
+	this.selectedNode = null;
 }
 
 Data.prototype.read = function() {
@@ -79,6 +85,53 @@ Data.prototype.read = function() {
 	this.addFloor();
 }
 
+Data.prototype.createLine = function(id) {
+	
+}
+
+Data.prototype.selectNode = function(id) {
+	if (selectedNode == null)
+		selectedNode = id;
+	else if (selectedNode == id)
+		selectedNode = null;	
+	else {
+		createLine(selectedNode, id);
+		selectedNode = null;
+	}
+}
+
+Data.prototype.getClosestNode = function(e, limit) {
+	var closestNode = null;
+	var min = null;
+	var target = map.latLngToLayerPoint(e.latlng);
+	for (var id in this.nodes)
+		if (this.nodes[id].floor == this.floor+1) {
+			var pos = this.map.latLngToLayerPoint(this.nodes[id].marker.getLatLng());
+			var dist = target.distanceTo(pos); 
+			if ((min == null && dist < limit) || (min != null && dist < min)) {
+				closestNode = this.nodes[id];
+				min = dist;
+			}
+		}
+	return closestNode;
+}
+
+
+Data.prototype.clickHandler = function(e) {
+	var nearestNode = this.getClosestNode(e, 40);
+	console.log(nearestNode);
+	if (nearestNode != null)
+		this.selectNode(nearestNode.id);
+	else
+		this.addNode(e);
+}
+
+Data.prototype.addNode = function(e) {
+	var n = new Node(e.latlng.lat, e.latlng.lng, this.floor+1);
+	this.nodes[n.id] = n;
+	n.marker.addTo(this.map)
+}
+
 Data.prototype.addFloor = function() {
 	this.map.addLayer(this.maps[this.floor]);
 	for (var id in this.nodes)
@@ -91,12 +144,6 @@ Data.prototype.removeFloor = function() {
 	for (var id in this.nodes)
 		if (this.nodes[id].floor == this.floor+1)
 			this.map.removeLayer(this.nodes[id].marker);
-}
-
-Data.prototype.addNode = function(e) {
-	var n = new Node(e.latlng.lat, e.latlng.lng, this.floor+1);
-	this.nodes[n.id] = n;
-	n.marker.addTo(this.map)
 }
 
 Data.prototype.floorUp = function() {

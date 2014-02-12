@@ -32,7 +32,7 @@
 			map.addControl(Button(d.floorUp.bind(d), {'text':'Up'}));
 			map.addControl(Button(d.floorDown.bind(d), {'text':'Down'}));
 
-			map.on('click', d.addNode.bind(d));
+			map.on('click', d.clickHandler.bind(d));
 		</script>
 	</body>
 </html>
