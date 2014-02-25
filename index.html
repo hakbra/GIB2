@@ -26,7 +26,10 @@
 			map.setView(new L.LatLng(63.4147,10.4073),18);
 			map.addLayer(osm);
 
-			d = new Data(map);
+			var info = new CustomControl('info', {position:"bottomright"});
+			map.addControl(info);
+
+			d = new Data(map, info);
 			d.read();
 
 			map.addControl(Button(d.floorUp.bind(d), {'text':'Up'}));
