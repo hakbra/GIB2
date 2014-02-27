@@ -1,6 +1,4 @@
 // Custom objects
-
-
 var CustomControl = function(name, options) {
 	
 	var control = new (L.Control.extend({
@@ -42,3 +40,17 @@ var Button = function(buttonFunction, options) {
 
 	return control;
 };
+
+// Custom markers icons
+var redIcon = L.icon({ 
+        iconUrl: 'img/marker_red.png',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, 0],
+});
+var greenIcon = L.icon({ 
+        iconUrl: 'img/marker_green.png',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, 0],
+});

@@ -1,85 +1,6 @@
-// Database
-function sendAjax(sql, method) {
-	var xmlhttp=new XMLHttpRequest();
-	console.log("SQL: " + sql);
-	xmlhttp.open("GET","driver.php?sql="+sql+"&method="+method,false);
-	xmlhttp.send();
-	console.log("Response: " + xmlhttp.responseText);
-	return JSON.parse(xmlhttp.responseText);
-}
-
-function getAll(sql) {
-	return sendAjax(sql, 'getAll');
-}
-
-function getOne(sql) {
-	return sendAjax(sql, 'getOne');
-}
-
-function execute(sql) {
-	sendAjax(sql, 'execute');
-}
-
-function insert(sql) {
-	return sendAjax(sql, 'insert');
-}
-
-// Marker icons
-
-var redIcon = L.icon({ 
-        iconUrl: 'img/marker_red.png', // pull out values as desired from the feature feature.properties.style.externalGraphic.
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-        popupAnchor: [0, 0],
-    });
-var greenIcon = L.icon({ 
-        iconUrl: 'img/marker_green.png', // pull out values as desired from the feature feature.properties.style.externalGraphic.
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-        popupAnchor: [0, 0],
-    });
-
-// Line
-
-function Line(a, b) {
-	this.a = a;
-	this.b = b;
-	this.dist = a.ll.distanceTo(b.ll);
-	this.polyline = L.polyline([a.ll, b.ll]);
-
-	a.neighbours.push(b.id);
-	b.neighbours.push(a.id);
-}
-
-Line.prototype.write = function() {
-	execute("INSERT INTO line (node_a, node_b, dist) VALUES(" + this.a.id + "," + this.b.id + "," + this.dist + ")");
-}
-
-// Node
-function Node(ll, f, id) {
-	this.id = id;
-	this.ll = ll;
-	this.floor = f;
-	this.type = null;
-	this.persons = new Array();
-	this.names = new Array();
-	if (id == null)
-		this.write();
-	this.neighbours = new Array();
-	this.marker = L.marker(ll, {icon: redIcon});
-}
-
-Node.prototype.write = function() {
-	var values = "Point("+this.ll.lat+","+this.ll.lng+"),"+this.floor+","+this.type;
-	this.id = insert(
-		"INSERT INTO node (pos, floor, type) VALUES("+values+")");
-}
-
 // Data class
-
-function Data(map, info) {
+function Data(map) {
 	this.map = map;
-	this.info = info;
 	this.mode = 0;
 	this.floor = 0;
 	this.maps = new Array();
@@ -87,7 +8,14 @@ function Data(map, info) {
 	this.lines = new Array();
 	this.selectedNode = null;
 	
+	this.info = new CustomControl('info', {position:"bottomright"});
+	this.map.addControl(this.info);
 	this.updateInfo();
+
+	this.map.addControl(Button(this.floorUp.bind(this), {'text':'Up'}));
+	this.map.addControl(Button(this.floorDown.bind(this), {'text':'Down'}));
+
+	this.map.on('click', this.clickHandler.bind(this));
 }
 
 function addPerson(sn) {
@@ -175,12 +103,7 @@ Data.prototype.read = function() {
 		this.nodes[names[i]["node_id"]].names.push(names[i]["name"]);
 	}
 	
-
 	this.addFloor();
-}
-
-Data.prototype.createLine = function(id) {
-	
 }
 
 Data.prototype.selectNode = function(id) {

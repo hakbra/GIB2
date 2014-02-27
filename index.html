@@ -8,8 +8,12 @@
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
 		<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
 
-		<link rel="stylesheet" href="style.css" />
+		<link rel="stylesheet" href="css/style.css" />
+
 		<script src="js/leaflet_util.js"></script>
+		<script src="js/node.js"></script>
+		<script src="js/line.js"></script>
+		<script src="js/db.js"></script>
 		<script src="js/data.js"></script>
 	</head>
 	<body>
@@ -26,16 +30,8 @@
 			map.setView(new L.LatLng(63.4147,10.4073),18);
 			map.addLayer(osm);
 
-			var info = new CustomControl('info', {position:"bottomright"});
-			map.addControl(info);
-
-			d = new Data(map, info);
+			d = new Data(map);
 			d.read();
-
-			map.addControl(Button(d.floorUp.bind(d), {'text':'Up'}));
-			map.addControl(Button(d.floorDown.bind(d), {'text':'Down'}));
-
-			map.on('click', d.clickHandler.bind(d));
 		</script>
 	</body>
 </html>
