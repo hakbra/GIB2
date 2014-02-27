@@ -20,7 +20,7 @@
 		<div id="map"></div>
 
 		<script>
-			map = new L.Map('map');
+			var map = new L.Map('map');
 
 			var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 			var osmAttrib='Map data © OpenStreetMap contributors';
@@ -31,7 +31,9 @@
 			map.addLayer(osm);
 
 			d = new Data(map);
+			d.mode = 0;
 			d.read();
+			d.draw();
 		</script>
 	</body>
 </html>

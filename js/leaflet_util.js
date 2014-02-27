@@ -14,7 +14,7 @@ var CustomControl = function(name, options) {
 }
 
 
-var Button = function(buttonFunction, options) {
+var CustomButton = function(buttonFunction, options) {
 
 	var control = new (L.Control.extend({
 		options: { position: 'topright' },

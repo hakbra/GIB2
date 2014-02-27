@@ -1,21 +1,21 @@
 // Data class
 function Data(map) {
 	this.map = map;
-	this.mode = 0;
+	this.mode = -1;
 	this.floor = 0;
 	this.maps = new Array();
 	this.nodes = new Object();
 	this.lines = new Array();
 	this.selectedNode = null;
+	this.layer = L.layerGroup().addTo(this.map);
 	
 	this.info = new CustomControl('info', {position:"bottomright"});
 	this.map.addControl(this.info);
-	this.updateInfo();
 
-	this.map.addControl(Button(this.floorUp.bind(this), {'text':'Up'}));
-	this.map.addControl(Button(this.floorDown.bind(this), {'text':'Down'}));
+	this.map.addControl(CustomButton(this.floorUp.bind(this), {'text':'Up'}));
+	this.map.addControl(CustomButton(this.floorDown.bind(this), {'text':'Down'}));
 
-	this.map.on('click', this.clickHandler.bind(this));
+	this.map.on('click', this.onClick.bind(this));
 }
 
 function addPerson(sn) {
@@ -69,7 +69,7 @@ Data.prototype.updateInfo = function() {
 	if (this.mode == 1)
 		html += "<small>info</small>";		
 	if (this.mode == 2)
-		html += "<small>line</small>";
+		html += "<small>edit</small>";
 
 	this.info._container.innerHTML = html;
 }
@@ -102,8 +102,6 @@ Data.prototype.read = function() {
 	for (var i = 0; i < names.length; i++) {
 		this.nodes[names[i]["node_id"]].names.push(names[i]["name"]);
 	}
-	
-	this.addFloor();
 }
 
 Data.prototype.selectNode = function(id) {
@@ -116,7 +114,7 @@ Data.prototype.selectNode = function(id) {
 		this.nodes[id].marker.setIcon(redIcon);
 	}
 	else {
-		if (this.mode == 2) { // Line mode
+		if (this.mode == 2) { // edit mode
 			var l = new Line(this.nodes[this.selectedNode], this.nodes[id]);
 			l.write();
 			this.lines.push(l);
@@ -146,18 +144,17 @@ Data.prototype.getClosestNode = function(target, limit) {
 }
 
 
-Data.prototype.clickHandler = function(e) {
-	if (e.originalEvent.altKey && this.mode != -1) {
+Data.prototype.onClick = function(e) {
+	if (e.originalEvent.altKey && this.mode != -1) { // Change mode if not in user mode
 		this.mode = (this.mode + 1) % 3;
 		this.updateInfo();
-		this.removeFloor();
-		this.addFloor();
+		this.draw();
 		return;
 	}
 	var nearestNode = this.getClosestNode(e.latlng, 40);
 	if (nearestNode != null)
 		this.selectNode(nearestNode.id);
-	else if(this.mode > 0) // 0 = readMode
+	else if(this.mode > 1) // Only in edit-mode
 		this.addNode(e);
 }
 
@@ -167,49 +164,39 @@ Data.prototype.addNode = function(e) {
 	n.marker.addTo(this.map)
 }
 
-Data.prototype.addFloor = function() {
-	this.map.addLayer(this.maps[this.floor]);
-	for (var id in this.nodes)
-		if (this.nodes[id].floor == this.floor) {
-			if (this.mode == -1) {
+Data.prototype.draw = function() {
+	this.updateInfo();
+
+	this.layer.clearLayers();
+	this.layer.addLayer(this.maps[this.floor]); //Add basemap
+	for (var id in this.nodes) //Add nodes
+		if (this.nodes[id].floor == this.floor) { // Only if they are on the current floor
+			if (this.mode == -1) { // Only if they have roomname in usermode
 				if (this.nodes[id].names.length > 0) {
-					this.map.addLayer(this.nodes[id].marker);
+					this.layer.addLayer(this.nodes[id].marker);
 				}
 			} else {
-					this.map.addLayer(this.nodes[id].marker);
+					this.layer.addLayer(this.nodes[id].marker);
 			}
 		}
 	if (this.mode != 2) // line mode
 		return;
-	for (var i = 0; i < this.lines.length; i++) {
+	for (var i = 0; i < this.lines.length; i++) { // Add lines
 		if (this.lines[i].a.floor == this.floor || this.lines[i].b.floor == this.floor)
-			this.lines[i].polyline.addTo(map); 
-	}
-}
-
-Data.prototype.removeFloor = function() {
-	this.map.removeLayer(this.maps[this.floor]);
-	for (var id in this.nodes)
-		if (this.nodes[id].floor == this.floor)
-			this.map.removeLayer(this.nodes[id].marker);
-	for (var i = 0; i < this.lines.length; i++) {
-		if (this.lines[i].a.floor == this.floor || this.lines[i].b.floor == this.floor)
-			this.map.removeLayer(this.lines[i].polyline); 
+			this.lines[i].polyline.addTo(this.layer); 
 	}
 }
 
 Data.prototype.floorUp = function() {
-	if (this.floor == this.maps.length-1)
+	if (this.floor == this.maps.length-1) // Cant go further up
 		return;
-	this.removeFloor();
 	this.floor++;
-	this.addFloor();
+	this.draw();
 }
 
 Data.prototype.floorDown = function() {
-	if (this.floor == 0)
+	if (this.floor == 0) //Cant go further down
 		return;
-	this.removeFloor();
 	this.floor--;
-	this.addFloor();
+	this.draw();
 }
