@@ -1,23 +1,3 @@
-// Data class
-function Data(map) {
-	this.map = map;
-	this.mode = -1;
-	this.floor = 0;
-	this.maps = new Array();
-	this.nodes = new Object();
-	this.lines = new Array();
-	this.selectedNode = null;
-	this.layer = L.layerGroup().addTo(this.map);
-	
-	this.info = new CustomControl('info', {position:"bottomright"});
-	this.map.addControl(this.info);
-
-	this.map.addControl(CustomButton(this.floorUp.bind(this), {'text':'Up'}));
-	this.map.addControl(CustomButton(this.floorDown.bind(this), {'text':'Down'}));
-
-	this.map.on('click', this.onClick.bind(this));
-}
-
 function addPerson(sn) {
 	var name = prompt("Person til node " + sn, "");
 	if (name == null)
@@ -29,6 +9,27 @@ function addRoom(sn) {
 	if (name == null)
 		return;
 	execute("INSERT INTO room VALUES (" + sn + ", \"" + name + "\")");
+}
+
+// Data class
+function Data(map) {
+	this.map = map;
+	this.mode = -1;
+	this.floor = 0;
+	this.maps = new Array();
+	this.nodes = new Object();
+	this.lines = new Array();
+	this.selectedNode = null;
+	this.layer = L.layerGroup().addTo(this.map);
+	this.pathlayer = L.layerGroup().addTo(this.map);
+	
+	this.info = new CustomControl('info', {position:"bottomright"});
+	this.map.addControl(this.info);
+
+	this.map.addControl(CustomButton(this.floorUp.bind(this), {'text':'Up'}));
+	this.map.addControl(CustomButton(this.floorDown.bind(this), {'text':'Down'}));
+
+	this.map.on('click', this.onClick.bind(this));
 }
 
 Data.prototype.updateInfo = function() {
@@ -61,6 +62,7 @@ Data.prototype.updateInfo = function() {
 			for (var i = 0; i < node.persons.length; i++)
 				html += "<br>" + node.persons[i];
 		}
+		html += "<br><small>id: " + node.id + "</small><br>";
 	}
 
 	html += "<br><br>";
@@ -112,13 +114,23 @@ Data.prototype.selectNode = function(id) {
 	else if (this.selectedNode == id) {
 		this.selectedNode = null;	
 		this.nodes[id].marker.setIcon(redIcon);
+		this.pathlayer.clearLayers();
 	}
 	else {
 		if (this.mode == 2) { // edit mode
 			var l = new Line(this.nodes[this.selectedNode], this.nodes[id]);
 			l.write();
 			this.lines.push(l);
-			l.polyline.addTo(this.map);
+			this.layer.addLayer(l.polyline);
+		} else {
+			var path = shortestPath(this.nodes, this.selectedNode, id);
+			var pl = new L.Polyline([], {color:'red'});
+			for (var k in path) {
+				var node = this.nodes[path[k]];
+				pl.addLatLng(node.ll);
+			}
+			this.pathlayer.clearLayers();
+			this.pathlayer.addLayer(pl);
 		}
 		this.nodes[id].marker.setIcon(greenIcon);
 		this.nodes[this.selectedNode].marker.setIcon(redIcon);
@@ -143,7 +155,6 @@ Data.prototype.getClosestNode = function(target, limit) {
 	return closestNode;
 }
 
-
 Data.prototype.onClick = function(e) {
 	if (e.originalEvent.altKey && this.mode != -1) { // Change mode if not in user mode
 		this.mode = (this.mode + 1) % 3;
@@ -161,7 +172,7 @@ Data.prototype.onClick = function(e) {
 Data.prototype.addNode = function(e) {
 	var n = new Node(e.latlng, this.floor);
 	this.nodes[n.id] = n;
-	n.marker.addTo(this.map)
+	this.layer.addLayer(n.marker);
 }
 
 Data.prototype.draw = function() {
@@ -179,8 +190,8 @@ Data.prototype.draw = function() {
 					this.layer.addLayer(this.nodes[id].marker);
 			}
 		}
-	if (this.mode != 2) // line mode
-		return;
+	//if (this.mode != 2) // line mode
+		//return;
 	for (var i = 0; i < this.lines.length; i++) { // Add lines
 		if (this.lines[i].a.floor == this.floor || this.lines[i].b.floor == this.floor)
 			this.lines[i].polyline.addTo(this.layer); 
