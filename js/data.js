@@ -22,6 +22,7 @@ function Data(map) {
 	this.selectedNode = null;
 	this.layer = L.layerGroup().addTo(this.map);
 	this.pathlayer = L.layerGroup().addTo(this.map);
+	this.path = null;
 	
 	this.info = new CustomControl('info', {position:"bottomright"});
 	this.map.addControl(this.info);
@@ -123,14 +124,8 @@ Data.prototype.selectNode = function(id) {
 			this.lines.push(l);
 			this.layer.addLayer(l.polyline);
 		} else {
-			var path = shortestPath(this.nodes, this.selectedNode, id);
-			var pl = new L.Polyline([], {color:'red'});
-			for (var k in path) {
-				var node = this.nodes[path[k]];
-				pl.addLatLng(node.ll);
-			}
-			this.pathlayer.clearLayers();
-			this.pathlayer.addLayer(pl);
+			this.path = shortestPath(this.nodes, this.selectedNode, id);
+			this.drawPath();
 		}
 		this.nodes[id].marker.setIcon(greenIcon);
 		this.nodes[this.selectedNode].marker.setIcon(redIcon);
@@ -162,7 +157,7 @@ Data.prototype.onClick = function(e) {
 		this.draw();
 		return;
 	}
-	var nearestNode = this.getClosestNode(e.latlng, 40);
+	var nearestNode = this.getClosestNode(e.latlng, 1);
 	if (nearestNode != null)
 		this.selectNode(nearestNode.id);
 	else if(this.mode > 1) // Only in edit-mode
@@ -175,9 +170,27 @@ Data.prototype.addNode = function(e) {
 	this.layer.addLayer(n.marker);
 }
 
+Data.prototype.drawPath = function() {
+	this.pathlayer.clearLayers();
+	if (this.path == null) return;
+	if (this.path["nodes"].length == 1) return;
+
+	for (var i = 1; i < this.path["nodes"].length; i++) {
+		var n1 = this.nodes[this.path["nodes"][i-1]];
+		var n2 = this.nodes[this.path["nodes"][i]];
+
+		if (n1.floor != this.floor && n2.floor != this.floor)
+			continue;
+
+		var pl = new L.Polyline([n1.ll, n2.ll], {color:'red'});
+		this.pathlayer.addLayer(pl);
+	}
+	console.log(this.path["dist"]);
+}
+
 Data.prototype.draw = function() {
 	this.updateInfo();
-
+	this.drawPath();
 	this.layer.clearLayers();
 	this.layer.addLayer(this.maps[this.floor]); //Add basemap
 	for (var id in this.nodes) //Add nodes
@@ -190,8 +203,8 @@ Data.prototype.draw = function() {
 					this.layer.addLayer(this.nodes[id].marker);
 			}
 		}
-	//if (this.mode != 2) // line mode
-		//return;
+	if (this.mode != 2) // line mode
+		return;
 	for (var i = 0; i < this.lines.length; i++) { // Add lines
 		if (this.lines[i].a.floor == this.floor || this.lines[i].b.floor == this.floor)
 			this.lines[i].polyline.addTo(this.layer); 

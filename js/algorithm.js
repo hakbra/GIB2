@@ -40,6 +40,16 @@ function getPath(came_from, current_node) {
 	return path;
 }
 
+function getPathDist(nodes, path) {
+	var pdist = 0;
+	if (path.length > 1)
+		pdist = dist(nodes[path[0]], nodes[path[1]]);
+	for (var i = 1; i < path.length; i++) {
+		pdist += dist(nodes[path[i-1]], nodes[path[i]]);
+	}
+	return pdist;
+}
+
 function getMinKey(openset, score) {
 	var minVal = null;
 	var minKey = null;
@@ -73,8 +83,11 @@ function shortestPath(nodes, from_id, to_id) {
 
 	while (!openset.empty()) {
 		var current = getMinKey(openset, f_score);		
-		if (current == to_id)
-			return getPath(came_from, current);
+		if (current == to_id) {
+			var path = getPath(came_from, current);
+			var pdist = getPathDist(nodes, path);
+			return {"nodes": path, "dist": pdist};
+		}
 			
 		//console.log("current: " + current);
 		//console.log("openset: " + openset.str());
