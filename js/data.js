@@ -34,10 +34,11 @@ function Data(map) {
 }
 
 Data.prototype.updateInfo = function() {
+	var node = null;
 	if (this.selectedNode == null) {
 		var html = "Velg rom";
 	} else {
-		var node = this.nodes[this.selectedNode];
+		node = this.nodes[this.selectedNode];
 
 		var html = (this.mode <= 0) ? "Ingen navn" : "Node " + this.selectedNode;
 		if (node.names.length > 0) {
@@ -63,16 +64,19 @@ Data.prototype.updateInfo = function() {
 			for (var i = 0; i < node.persons.length; i++)
 				html += "<br>" + node.persons[i];
 		}
-		html += "<br><small>id: " + node.id + "</small><br>";
 	}
 
 	html += "<br><br>";
+	if (this.path != null)
+		html += "<small>avstand: " + Math.round(this.path["dist"]) + "m</small><br>";
+	if (node != null)
+		html += "<small>id: " + node.id + "</small><br>";
 	if (this.mode == 0)
-		html += "<small>read</small>";		
+		html += "<small>mode: read</small>";		
 	if (this.mode == 1)
-		html += "<small>info</small>";		
+		html += "<small>mode: info</small>";		
 	if (this.mode == 2)
-		html += "<small>edit</small>";
+		html += "<small>mode: edit</small>";
 
 	this.info._container.innerHTML = html;
 }
@@ -124,7 +128,7 @@ Data.prototype.selectNode = function(id) {
 			this.lines.push(l);
 			this.layer.addLayer(l.polyline);
 		} else {
-			this.path = shortestPath(this.nodes, this.selectedNode, id);
+			this.path = shortestPath(this.nodes, this.selectedNode, [id]);
 			this.drawPath();
 		}
 		this.nodes[id].marker.setIcon(greenIcon);

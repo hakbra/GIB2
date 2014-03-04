@@ -24,7 +24,10 @@ Set.prototype.str = function() {
 	return txt;
 }
 function dist(a, b) {
-	return a.ll.distanceTo(b.ll);
+	var hordist = a.ll.distanceTo(b.ll);
+	var floordiff = Math.abs(a.floor - b.floor);
+	var floordist = floordiff * 3;
+	return Math.sqrt(hordist*hordist+floordist*floordist);
 }
 
 function getPath(came_from, current_node) {
@@ -55,11 +58,14 @@ function getMinKey(openset, score) {
 	var minKey = null;
 	for (var key in openset) if (openset.hasOwnProperty(key) && key != "counter") {
 		var val = score[key];
+		console.log("Value: " + val);
+		console.log("Key: " + key);
 		if (minVal == null || val < minVal) {
 			minVal = val;
 			minKey = key;
 		}
 	 }
+	 console.log("Returning: " + minKey);
 	return minKey;
 }
 
@@ -71,31 +77,36 @@ function p(obj) {
 	return txt;
 }
 
-function shortestPath(nodes, from_id, to_id) {
+function shortestPath(nodes, from_id, to_ids) {
 	var closedset = new Set();
 	var openset = new Set();
-	openset.add(from_id);
 	var came_from = new Object();
 	var g_score = new Object();
-	var f_score = new Object();
+	var goals = new Set();
+
 	g_score[from_id] = 0;
-	f_score[from_id] = dist(nodes[from_id], nodes[to_id]);
+	openset.add(from_id);
+
+	if (to_ids.constructor === Array)
+		for (var k in to_ids)
+			goals.add(to_ids[k]);
+	else
+		goals.add(to_ids);
 
 	while (!openset.empty()) {
-		var current = getMinKey(openset, f_score);		
-		if (current == to_id) {
+		var current = getMinKey(openset, g_score);		
+		if (current in goals) {
 			var path = getPath(came_from, current);
 			var pdist = getPathDist(nodes, path);
 			return {"nodes": path, "dist": pdist};
 		}
 			
-		//console.log("current: " + current);
-		//console.log("openset: " + openset.str());
-		//console.log("closedset: " + closedset.str());
-		//console.log("comefrom: " + p(came_from));
-		//console.log("gscore: " + p(g_score));
-		//console.log("fscore: " + p(f_score));
-		//console.log("=================");
+		console.log("current: " + current);
+		console.log("openset: " + openset.str());
+		console.log("closedset: " + closedset.str());
+		console.log("comefrom: " + p(came_from));
+		console.log("gscore: " + p(g_score));
+		console.log("=================");
 
 		openset.del(current);
 		closedset.add(current);
@@ -103,11 +114,11 @@ function shortestPath(nodes, from_id, to_id) {
 			var n = nodes[current].neighbours[nkey];
 			if (n in closedset)
 				continue;
+
 			var new_g_score = g_score[current] + dist(nodes[current], nodes[n]);
 			if ((!(n in openset)) || (new_g_score < g_score[n])) {
 				came_from[n] = current;
 				g_score[n] = new_g_score;
-				f_score[n] = g_score[n] + dist(nodes[n], nodes[to_id]);
 				openset.add(n);
 			}
 		}
