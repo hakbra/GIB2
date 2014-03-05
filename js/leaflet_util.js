@@ -4,8 +4,9 @@ var CustomControl = function(name, options) {
 	var control = new (L.Control.extend({
 		options: options,
 		onAdd: function (map) {
-			var container = L.DomUtil.create('div',name);
-			container.innerHTML = "Hello";
+			var container = L.DomUtil.create('div','ccontrol ' + name);
+			L.DomEvent.disableClickPropagation(container);
+			container.innerHTML = "test";
 			return container;
 		}
 	}));

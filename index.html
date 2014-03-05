@@ -3,15 +3,18 @@
 	<head>
 		<title>Leaflet Test</title>
 		<meta charset="utf-8" />
-
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
-		<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
-
 		<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/leaflet-search.min.css" />
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
 
+		<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+		<script src="//code.jquery.com/jquery-1.9.1.js"></script>
+		<script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 		<script src="js/leaflet_util.js"></script>
 		<script src="js/algorithm.js"></script>
+		<script src="js/location.js"></script>
 		<script src="js/node.js"></script>
 		<script src="js/line.js"></script>
 		<script src="js/db.js"></script>
@@ -32,7 +35,7 @@
 			map.addLayer(osm);
 
 			d = new Data(map);
-			d.mode = 0;
+			//d.mode = 0;
 			d.read();
 			d.draw();
 

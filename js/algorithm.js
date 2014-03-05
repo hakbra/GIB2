@@ -58,14 +58,14 @@ function getMinKey(openset, score) {
 	var minKey = null;
 	for (var key in openset) if (openset.hasOwnProperty(key) && key != "counter") {
 		var val = score[key];
-		console.log("Value: " + val);
-		console.log("Key: " + key);
+		//console.log("Value: " + val);
+		//console.log("Key: " + key);
 		if (minVal == null || val < minVal) {
 			minVal = val;
 			minKey = key;
 		}
 	 }
-	 console.log("Returning: " + minKey);
+	 //console.log("Returning: " + minKey);
 	return minKey;
 }
 
@@ -101,12 +101,12 @@ function shortestPath(nodes, from_id, to_ids) {
 			return {"nodes": path, "dist": pdist};
 		}
 			
-		console.log("current: " + current);
-		console.log("openset: " + openset.str());
-		console.log("closedset: " + closedset.str());
-		console.log("comefrom: " + p(came_from));
-		console.log("gscore: " + p(g_score));
-		console.log("=================");
+		//console.log("current: " + current);
+		//console.log("openset: " + openset.str());
+		//console.log("closedset: " + closedset.str());
+		//console.log("comefrom: " + p(came_from));
+		//console.log("gscore: " + p(g_score));
+		//console.log("=================");
 
 		openset.del(current);
 		closedset.add(current);

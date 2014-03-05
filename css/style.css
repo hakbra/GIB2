@@ -24,7 +24,7 @@ html, body, #map {
 }
 
 
-.info {
+.ccontrol {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
     background: white;
@@ -32,7 +32,10 @@ html, body, #map {
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
 }
-.info h4 {
+.ccontrol h4 {
     margin: 0 0 5px;
     color: #777;
 }
+
+ul.ui-autocomplete.ui-menu { z-index: 1000; }
+.ui-helper-hidden-accessible { display:none; }
