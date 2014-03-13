@@ -23,7 +23,7 @@ html, body, #map {
     height: 100%;
 }
 
-.fromButton {
+.toFromButton {
 	width: 50px;
 	height: 20px;
 	background-position: 50% 50%;
@@ -36,22 +36,6 @@ html, body, #map {
 	box-shadow: 0 1px 7px rgba(0, 0, 0, 0.65);
 	cursor: auto;
 	text-align: center;
-	background-color: #00FF00;
-}
-.toButton {
-	width: 50px;
-	height: 20px;
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	display: block;
-	padding: 3px;
-	border-radius: 4px;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	box-shadow: 0 1px 7px rgba(0, 0, 0, 0.65);
-	cursor: auto;
-	text-align: center;
-	background-color: #FF0000;
 }
 
 .ccontrol {
@@ -70,3 +54,19 @@ html, body, #map {
 
 ul.ui-autocomplete.ui-menu { z-index: 1000; }
 .ui-helper-hidden-accessible { display:none; }
+
+.dropDown {
+	position: absolute;
+	top: 0px;
+	z-index: 5;
+}
+
+.dropDown input {
+	display: block;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.leaflet-left {
+	z-index: 3;
+}

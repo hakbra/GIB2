@@ -4,7 +4,7 @@ var CustomControl = function(name, options) {
 	var control = new (L.Control.extend({
 		options: options,
 		onAdd: function (map) {
-			var container = L.DomUtil.create('div','ccontrol ' + name);
+			var container = L.DomUtil.create('div',name);
 			L.DomEvent.disableClickPropagation(container);
 			container.innerHTML = "test";
 			return container;
@@ -20,7 +20,7 @@ var CustomButton = function(buttonFunction, options) {
 	var control = new (L.Control.extend({
 		options: { position: 'topright' },
 		onAdd: function (map) {
-				controlDiv = L.DomUtil.create('div', 'button');
+			controlDiv = L.DomUtil.create('div', 'button');
 			L.DomEvent
 				.addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
 				.addListener(controlDiv, 'click', L.DomEvent.preventDefault)

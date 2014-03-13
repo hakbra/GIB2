@@ -2,13 +2,19 @@ function addPerson(sn) {
 	var name = prompt("Person til node " + sn, "");
 	if (name == null)
 		return;
-	execute("INSERT INTO person VALUES (" + sn + ", \"" + name + "\")");
+	execute("INSERT INTO property VALUES (" + sn + ", 'person', \"" + name + "\")");
 }
 function addRoom(sn) {
 	var name = prompt("Navn til node " + sn, "");
 	if (name == null)
 		return;
-	execute("INSERT INTO room VALUES (" + sn + ", \"" + name + "\")");
+	execute("INSERT INTO property VALUES (" + sn + ", 'room', \"" + name + "\")");
+}
+function addType(sn) {
+	var name = prompt("Type til node " + sn, "");
+	if (name == null)
+		return;
+	execute("INSERT INTO property VALUES (" + sn + ", 'type', \"" + name + "\")");
 }
 
 // Data class
@@ -25,38 +31,59 @@ function Data(map) {
 	this.path = null;
 	this.position = null;
 	this.targets = null;
-	this.toFromMode = 0;
+	this.toFromMode = 1;
+	this.autocomplete = null;
 	
 	this.info = new CustomControl('info', {position:"bottomright"});
 	this.map.addControl(this.info);
-
 	this.map.addControl(CustomButton(this.floorUp.bind(this), {'text':'Up'}));
 	this.map.addControl(CustomButton(this.floorDown.bind(this), {'text':'Down'}));
+	this.map.addControl(new CustomControl('dropDown ui-widget', {position: "topleft"}));
+	this.map.addControl(CustomButton(this.toggleToFrom.bind(this), {'text':'To/From', 'classname' : 'toFromButton'}));
 
-	this.map.addControl(CustomButton(this.fromButton.bind(this), {'text':'Fra', 'classname' : 'fromButton'}));
-	this.map.addControl(CustomButton(this.toButton.bind(this), {'text':'Til', 'classname': 'toButton'}));
-
-	this.map.addControl(new CustomControl('dropDown ui-widget', {position: "topright"}));
 	this.populateDrowdown();
+	this.toggleToFrom();
 
 	this.map.on('click', this.onClick.bind(this));
 }
 
-Data.prototype.toButton = function() {
-	this.toFromMode = 1;
-}
-
-Data.prototype.fromButton = function() {
-	this.toFromMode = 0;
+Data.prototype.toggleToFrom = function() {
+	var d = this;
+	if (this.toFromMode == 0) {
+		this.toFromMode = 1;
+		$(".toFromButton").css("background-color", "red");
+		$( "#search" ).autocomplete({
+			source: this.autocomplete.all,
+			select: function( event, ui ) {
+				event.preventDefault();
+				$("#search").val(ui.item.label);
+				d.targets = ui.item.value;
+				d.makePath();
+			}
+		});
+	} else {
+		this.toFromMode = 0;
+		$(".toFromButton").css("background-color", "green");
+		$( "#search" ).autocomplete({
+			source: this.autocomplete.single,
+			select: function( event, ui ) {
+				event.preventDefault();
+				$("#search").val(ui.item.label);
+				d.position = ui.item.value;
+				d.makePath();
+			}
+		});
+	}
 }
 
 Data.prototype.populateDrowdown = function() {
 	$("div.dropDown").html("<input id=search>");
+	$("div.dropDown").css("width", $(window).width());
 
-	var names = getAll("SELECT DISTINCT name, node_id FROM room UNION SELECT DISTINCT name, node_id FROM person");
+	var names = getAll("SELECT value, node_id FROM property");
 	var dict = {};
 	for (var i = 0; i < names.length; i++) {
-		var name = names[i]["name"];
+		var name = names[i]["value"];
 		var id = names[i]["node_id"];
 		if (!(name in dict))
 			dict[name] = new Array();
@@ -67,17 +94,14 @@ Data.prototype.populateDrowdown = function() {
 	for (var k in dict) {
 		sourcelist.push( {value: dict[k], label: k} );
 	}
+	
+	var singleNames = getAll("SELECT value, node_id FROM property WHERE type = 'name' OR type = 'person'");
+	var singleSourcelist = new Array();
+	for (var i = 0; i < singleNames.length; i++)
+		singleSourcelist.push( {value: singleNames[i]["node_id"], label:singleNames[i]["value"]}); 
 
-	var d = this;
-	$( "#search" ).autocomplete({
-		source: sourcelist,
-		select: function( event, ui ) {
-			event.preventDefault();
-			$("#search").val(ui.item.label);
-			d.targets = ui.item.value;
-			d.makePath();
-		}
-	});
+
+	this.autocomplete = {all : sourcelist, single : singleSourcelist};
 }
 
 Data.prototype.makePath = function() {
@@ -155,14 +179,14 @@ Data.prototype.read = function() {
 		this.lines.push(l);
 	}
 
-	var persons = getAll("SELECT * FROM person");
+	var persons = getAll("SELECT node_id, value FROM property WHERE type = 'person'");
 	for (var i = 0; i < persons.length; i++) {
-		this.nodes[persons[i]["node_id"]].persons.push(persons[i]["name"]);
+		this.nodes[persons[i]["node_id"]].persons.push(persons[i]["value"]);
 	}
 
-	var names = getAll("SELECT * FROM room");
+	var names = getAll("SELECT node_id, value FROM property WHERE type = 'name'");
 	for (var i = 0; i < names.length; i++) {
-		this.nodes[names[i]["node_id"]].names.push(names[i]["name"]);
+		this.nodes[names[i]["node_id"]].names.push(names[i]["value"]);
 	}
 }
 
@@ -248,7 +272,7 @@ Data.prototype.drawPath = function() {
 			var n2 = this.nodes[this.path["nodes"][i]];
 
 			if (n1.floor == this.floor && n2.floor == this.floor) {
-				var pl = new L.Polyline([n1.ll, n2.ll], {color:'red'});
+				var pl = new L.Polyline([n1.ll, n2.ll], {color:'blue'});
 				this.pathlayer.addLayer(pl);
 			}
 			else if (n1.floor == this.floor) {
@@ -273,7 +297,6 @@ Data.prototype.drawPath = function() {
 		}
 	}
 	if (this.position != null && this.nodes[this.position].floor == this.floor) {
-		console.log(this.position);
 		this.pathlayer.addLayer(L.marker(this.nodes[this.position].ll, {icon: new greenMarker()}));
 	}
 }
