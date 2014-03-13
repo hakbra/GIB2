@@ -20,7 +20,7 @@ var CustomButton = function(buttonFunction, options) {
 	var control = new (L.Control.extend({
 		options: { position: 'topright' },
 		onAdd: function (map) {
-			controlDiv = L.DomUtil.create('div', 'button');
+				controlDiv = L.DomUtil.create('div', 'button');
 			L.DomEvent
 				.addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
 				.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
@@ -30,7 +30,10 @@ var CustomButton = function(buttonFunction, options) {
 			var controlUI = L.DomUtil.create('div', 'button-border', controlDiv);
 
 			// Set CSS for the control interior
-			var controlText = L.DomUtil.create('div', 'button-interior', controlUI);
+			if (options["classname"] === undefined)
+				var controlText = L.DomUtil.create('div', 'button-interior', controlUI);
+			else
+				var controlText = L.DomUtil.create('div', options.classname, controlUI);
 			controlText.innerHTML = options['text'];
 
 			return controlDiv;
@@ -54,4 +57,27 @@ var greenIcon = L.icon({
         iconSize: [20, 20],
         iconAnchor: [10, 10],
         popupAnchor: [0, 0],
+});
+var downIcon = L.icon({ 
+        iconUrl: 'img/down.gif',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, 0],
+});
+var upIcon = L.icon({ 
+        iconUrl: 'img/up.png',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, 0],
+});
+var redMarker = L.Icon.Default.extend({
+	options: {
+		iconUrl: 'img/marker-icon-red.png' 
+	}
+});
+
+var greenMarker = L.Icon.Default.extend({
+	options: {
+		iconUrl: 'img/marker-icon-green.png' 
+	}
 });

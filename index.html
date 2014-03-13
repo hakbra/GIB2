@@ -6,10 +6,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
 		<link rel="stylesheet" href="css/style.css" />
-		<link rel="stylesheet" href="css/leaflet-search.min.css" />
 		<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
 
-		<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+		<script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet-src.js"></script>
 		<script src="//code.jquery.com/jquery-1.9.1.js"></script>
 		<script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 		<script src="js/leaflet_util.js"></script>
@@ -29,7 +28,7 @@
 			var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 			var osmAttrib='Map data © OpenStreetMap contributors';
 			var osm = new L.TileLayer(osmUrl, 
-				{minZoom: 18, maxZoom: 22, maxNativeZoom: 19, attribution: osmAttrib});		
+				{minZoom: 18, maxZoom: 21, maxNativeZoom: 19, attribution: osmAttrib});		
 
 			map.setView(new L.LatLng(63.4147,10.4073),18);
 			map.addLayer(osm);

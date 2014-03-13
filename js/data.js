@@ -25,6 +25,7 @@ function Data(map) {
 	this.path = null;
 	this.position = null;
 	this.targets = null;
+	this.toFromMode = 0;
 	
 	this.info = new CustomControl('info', {position:"bottomright"});
 	this.map.addControl(this.info);
@@ -32,10 +33,21 @@ function Data(map) {
 	this.map.addControl(CustomButton(this.floorUp.bind(this), {'text':'Up'}));
 	this.map.addControl(CustomButton(this.floorDown.bind(this), {'text':'Down'}));
 
+	this.map.addControl(CustomButton(this.fromButton.bind(this), {'text':'Fra', 'classname' : 'fromButton'}));
+	this.map.addControl(CustomButton(this.toButton.bind(this), {'text':'Til', 'classname': 'toButton'}));
+
 	this.map.addControl(new CustomControl('dropDown ui-widget', {position: "topright"}));
 	this.populateDrowdown();
 
 	this.map.on('click', this.onClick.bind(this));
+}
+
+Data.prototype.toButton = function() {
+	this.toFromMode = 1;
+}
+
+Data.prototype.fromButton = function() {
+	this.toFromMode = 0;
 }
 
 Data.prototype.populateDrowdown = function() {
@@ -70,8 +82,8 @@ Data.prototype.populateDrowdown = function() {
 
 Data.prototype.makePath = function() {
 	if (this.position != null && this.targets != null) {
-		var closest = this.getClosestNode(this.position.pos, this.position.floor, 400);
-		this.path = shortestPath(this.nodes, closest.id, this.targets);
+		this.path = shortestPath(this.nodes, this.position, this.targets);
+		this.updateInfo();
 	}
 	this.drawPath();
 }
@@ -125,7 +137,7 @@ Data.prototype.updateInfo = function() {
 }
 
 Data.prototype.read = function() {
-	var options = {minZoom: 18, maxZoom: 22, attribution: "Håkon Bråten"};
+	var options = {minZoom: 18, maxZoom: 21, attribution: "Håkon Bråten"};
 	var layers = getAll("SELECT * FROM layer ORDER BY floor");
 
 	for (var i = 0; i < layers.length; i++)
@@ -204,10 +216,12 @@ Data.prototype.onClick = function(e) {
 		return;
 	}
 	if (this.mode == -1) {
-		if (this.position != null)
-			this.layer.removeLayer(this.position.marker);
-		this.position = new Position(e.latlng, this.floor);
-		this.layer.addLayer(this.position.marker);
+		var closestNode = this.getClosestNode(e.latlng, this.floor, 400);
+		if (this.toFromMode == 0)
+			this.position = closestNode.id;
+		else
+			this.targets = [closestNode.id];
+
 		this.makePath();
 		return;
 	}
@@ -233,19 +247,34 @@ Data.prototype.drawPath = function() {
 			var n1 = this.nodes[this.path["nodes"][i-1]];
 			var n2 = this.nodes[this.path["nodes"][i]];
 
-			if (n1.floor != this.floor && n2.floor != this.floor)
-				continue;
-
-			var pl = new L.Polyline([n1.ll, n2.ll], {color:'red'});
-			this.pathlayer.addLayer(pl);
+			if (n1.floor == this.floor && n2.floor == this.floor) {
+				var pl = new L.Polyline([n1.ll, n2.ll], {color:'red'});
+				this.pathlayer.addLayer(pl);
+			}
+			else if (n1.floor == this.floor) {
+				if (n2.floor > n1.floor)
+					this.pathlayer.addLayer(L.marker(n1.ll, {icon: upIcon})); // Pil opp
+				else
+					this.pathlayer.addLayer(L.marker(n1.ll, {icon: downIcon})); // Pil ned
+			}
+			else if (n2.floor == this.floor) {
+				if (n1.floor > n2.floor)
+					this.pathlayer.addLayer(L.marker(n2.ll, {icon: upIcon})); // Pil opp
+				else
+					this.pathlayer.addLayer(L.marker(n2.ll, {icon: downIcon})); // Pil ned
+			}
 		}
 	}
 	if (this.targets != null) {
 		for (var k in this.targets) {
 			var tnode = this.targets[k];
 			if (this.nodes[tnode].floor == this.floor)
-				this.pathlayer.addLayer(L.marker(this.nodes[tnode].ll));
+				this.pathlayer.addLayer(L.marker(this.nodes[tnode].ll, {icon: new redMarker()}));
 		}
+	}
+	if (this.position != null && this.nodes[this.position].floor == this.floor) {
+		console.log(this.position);
+		this.pathlayer.addLayer(L.marker(this.nodes[this.position].ll, {icon: new greenMarker()}));
 	}
 }
 
