@@ -23,21 +23,6 @@ html, body, #map {
     height: 100%;
 }
 
-.toFromButton {
-	width: 50px;
-	height: 20px;
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	display: block;
-	padding: 3px;
-	border-radius: 4px;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	box-shadow: 0 1px 7px rgba(0, 0, 0, 0.65);
-	cursor: auto;
-	text-align: center;
-}
-
 .ccontrol {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
@@ -55,18 +40,37 @@ html, body, #map {
 ul.ui-autocomplete.ui-menu { z-index: 1000; }
 .ui-helper-hidden-accessible { display:none; }
 
-.dropDown {
-	position: absolute;
-	top: 0px;
-	z-index: 5;
+#dropdownWrapper {
+	position:absolute;
+	top:10px;
+	left:0px;
+	width:100%;
+	z-index: 100
+	background-color: white;
+	text-align: center;
 }
 
-.dropDown input {
-	display: block;
-  margin-left: auto !important;
-  margin-right: auto !important;
+#dropdown {
+	display:inline-block;
+	width: 230px;
 }
 
-.leaflet-left {
-	z-index: 3;
+#toFromButton {
+	display:inline-block;
+	float: right;
+	padding: 3px;
+	border-radius: 4px;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	box-shadow: 0 1px 7px rgba(0, 0, 0, 0.65);
+	cursor: default;
+	text-align: center;
+	width: 60px;
+}
+
+#search {
+	display:inline-block;
+	float: left;
+	width: 150px;
+	height: 100%;
 }

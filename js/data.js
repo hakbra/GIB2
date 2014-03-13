@@ -38,8 +38,8 @@ function Data(map) {
 	this.map.addControl(this.info);
 	this.map.addControl(CustomButton(this.floorUp.bind(this), {'text':'Up'}));
 	this.map.addControl(CustomButton(this.floorDown.bind(this), {'text':'Down'}));
-	this.map.addControl(new CustomControl('dropDown ui-widget', {position: "topleft"}));
-	this.map.addControl(CustomButton(this.toggleToFrom.bind(this), {'text':'To/From', 'classname' : 'toFromButton'}));
+
+	$("#toFromButton").click(this.toggleToFrom.bind(this));
 
 	this.populateDrowdown();
 	this.toggleToFrom();
@@ -51,7 +51,7 @@ Data.prototype.toggleToFrom = function() {
 	var d = this;
 	if (this.toFromMode == 0) {
 		this.toFromMode = 1;
-		$(".toFromButton").css("background-color", "red");
+		$("#toFromButton").css("background-color", "red");
 		$( "#search" ).autocomplete({
 			source: this.autocomplete.all,
 			select: function( event, ui ) {
@@ -63,7 +63,7 @@ Data.prototype.toggleToFrom = function() {
 		});
 	} else {
 		this.toFromMode = 0;
-		$(".toFromButton").css("background-color", "green");
+		$("#toFromButton").css("background-color", "green");
 		$( "#search" ).autocomplete({
 			source: this.autocomplete.single,
 			select: function( event, ui ) {
@@ -77,9 +77,6 @@ Data.prototype.toggleToFrom = function() {
 }
 
 Data.prototype.populateDrowdown = function() {
-	$("div.dropDown").html("<input id=search>");
-	$("div.dropDown").css("width", $(window).width());
-
 	var names = getAll("SELECT value, node_id FROM property");
 	var dict = {};
 	for (var i = 0; i < names.length; i++) {
