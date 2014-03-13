@@ -14,36 +14,34 @@ var CustomControl = function(name, options) {
 	return control;
 }
 
-
-var CustomButton = function(buttonFunction, options) {
-
-	var control = new (L.Control.extend({
-		options: { position: 'topright' },
+var ButtonRow = function(options) {
+	var row = new(L.Control.extend({
+		options: options,
 		onAdd: function (map) {
-			controlDiv = L.DomUtil.create('div', 'button');
+			options = this.options;
+
+			container = L.DomUtil.create('div', 'upDownRow'),
+			this._upButton = this._createButton('Up', 'upButton button', container, options.upFunc);
+			this._upButton = this._createButton('Down', 'downButton button disabled', container, options.downFunc);
+
+			return container;
+		},
+		_createButton: function (html, className, container, fn) {
+			var link = L.DomUtil.create('div', className, container);
+			link.innerHTML = html;
+
 			L.DomEvent
-				.addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
-				.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
-				.addListener(controlDiv, 'click', this.clickFunction);
+			.on(link, 'mousedown dblclick', L.DomEvent.stopPropagation)
+			.on(link, 'click', L.DomEvent.stop)
+			.on(link, 'click', fn, this)
+			.on(link, 'click', this._refocusOnMap, this);
 
-			// Set CSS for the control border
-			var controlUI = L.DomUtil.create('div', 'button-border', controlDiv);
-
-			// Set CSS for the control interior
-			if (options["classname"] === undefined)
-				var controlText = L.DomUtil.create('div', 'button-interior', controlUI);
-			else
-				var controlText = L.DomUtil.create('div', options.classname, controlUI);
-			controlText.innerHTML = options['text'];
-
-			return controlDiv;
-		}
+			return link;
+		},
 	}));
 
-	control.clickFunction = buttonFunction;
-
-	return control;
-};
+	return row;
+}
 
 // Custom markers icons
 var redIcon = L.icon({ 

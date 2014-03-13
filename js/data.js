@@ -36,10 +36,14 @@ function Data(map) {
 	
 	this.info = new CustomControl('info', {position:"bottomright"});
 	this.map.addControl(this.info);
-	this.map.addControl(CustomButton(this.floorUp.bind(this), {'text':'Up'}));
-	this.map.addControl(CustomButton(this.floorDown.bind(this), {'text':'Down'}));
+
+	this.map.addControl(ButtonRow({
+		position: 'topright', 
+		upFunc: this.floorUp.bind(this), 
+		downFunc: this.floorDown.bind(this)}));
 
 	$("#toFromButton").click(this.toggleToFrom.bind(this));
+	$("#clearButton").click(this.clearTargets.bind(this));
 
 	this.populateDrowdown();
 	this.toggleToFrom();
@@ -47,11 +51,18 @@ function Data(map) {
 	this.map.on('click', this.onClick.bind(this));
 }
 
+Data.prototype.clearTargets = function() {
+	this.targets = null;
+	this.position = null;
+	this.path = null;
+	this.makePath();
+}
 Data.prototype.toggleToFrom = function() {
 	var d = this;
 	if (this.toFromMode == 0) {
 		this.toFromMode = 1;
-		$("#toFromButton").css("background-color", "red");
+		$("#toFromButton").css("background-color", "#FF0000");
+		$("#toFromButton").html("B");
 		$( "#search" ).autocomplete({
 			source: this.autocomplete.all,
 			select: function( event, ui ) {
@@ -64,6 +75,7 @@ Data.prototype.toggleToFrom = function() {
 	} else {
 		this.toFromMode = 0;
 		$("#toFromButton").css("background-color", "green");
+		$("#toFromButton").html("A");
 		$( "#search" ).autocomplete({
 			source: this.autocomplete.single,
 			select: function( event, ui ) {
@@ -107,6 +119,10 @@ Data.prototype.makePath = function() {
 		this.updateInfo();
 	}
 	this.drawPath();
+	if (this.position == null && this.targets != null && this.toFromMode == 1)
+		this.toggleToFrom();
+	if (this.position != null && this.targets == null && this.toFromMode == 0)
+		this.toggleToFrom();
 }
 
 Data.prototype.updateInfo = function() {
@@ -158,7 +174,7 @@ Data.prototype.updateInfo = function() {
 }
 
 Data.prototype.read = function() {
-	var options = {minZoom: 18, maxZoom: 21, attribution: "Håkon Bråten"};
+	var options = {minZoom: 18, maxZoom: 21, attribution: ""};
 	var layers = getAll("SELECT * FROM layer ORDER BY floor");
 
 	for (var i = 0; i < layers.length; i++)
@@ -319,11 +335,23 @@ Data.prototype.draw = function() {
 	}
 }
 
+Data.prototype.disableButtons = function() {
+	if (this.floor == this.maps.length-1)
+		$(".upButton").addClass("disabled");
+	else
+		$(".upButton").removeClass("disabled");
+	if (this.floor == 0)
+		$(".downButton").addClass("disabled");
+	else
+		$(".downButton").removeClass("disabled");
+}
+
 Data.prototype.floorUp = function() {
 	if (this.floor == this.maps.length-1) // Cant go further up
 		return;
 	this.floor++;
 	this.draw();
+	this.disableButtons();
 }
 
 Data.prototype.floorDown = function() {
@@ -331,4 +359,5 @@ Data.prototype.floorDown = function() {
 		return;
 	this.floor--;
 	this.draw();
+	this.disableButtons();
 }
