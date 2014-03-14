@@ -5,7 +5,7 @@ function Node(ll, f, id) {
 	this.floor = f;
 	this.type = null;
 	this.persons = new Array();
-	this.names = new Array();
+	this.name = null;
 	if (id == null)
 		this.write();
 	this.neighbours = new Array();

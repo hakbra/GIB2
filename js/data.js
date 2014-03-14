@@ -133,18 +133,13 @@ Data.prototype.updateInfo = function() {
 		node = this.nodes[this.selectedNode];
 
 		var html = (this.mode <= 0) ? "Ingen navn" : "Node " + this.selectedNode;
-		if (node.names.length > 0) {
-			html = "<b>" + node.names[0] + "</b>";
+		if (node.name != null) {
+			html = "<b>" + node.name + "</b>";
 		}
 		
 		if (this.mode == 1) // info mode
 			html += "<button onclick=\"addRoom("+this.selectedNode+")\">+</button>";
 
-
-		if (node.names.length > 1) {
-			for (var i = 1; i < node.names.length; i++)
-				html += "/<br><b>" + node.names[i] + "</b>";
-		}
 
 		html += "<br>";
 
@@ -199,7 +194,7 @@ Data.prototype.read = function() {
 
 	var names = getAll("SELECT node_id, value FROM property WHERE type = 'name'");
 	for (var i = 0; i < names.length; i++) {
-		this.nodes[names[i]["node_id"]].names.push(names[i]["value"]);
+		this.nodes[names[i]["node_id"]].name = names[i]["value"];
 	}
 }
 
@@ -305,12 +300,19 @@ Data.prototype.drawPath = function() {
 	if (this.targets != null) {
 		for (var k in this.targets) {
 			var tnode = this.targets[k];
-			if (this.nodes[tnode].floor == this.floor)
-				this.pathlayer.addLayer(L.marker(this.nodes[tnode].ll, {icon: new redMarker()}));
+			if (this.nodes[tnode].floor == this.floor) {
+				var marker = L.marker(this.nodes[tnode].ll, {icon: new redMarker()});
+				if (this.nodes[tnode].name != null)
+					marker.bindLabel(this.nodes[tnode].name, {noHide: true});
+				this.pathlayer.addLayer(marker);
+			}
 		}
 	}
 	if (this.position != null && this.nodes[this.position].floor == this.floor) {
-		this.pathlayer.addLayer(L.marker(this.nodes[this.position].ll, {icon: new greenMarker()}));
+		var marker = L.marker(this.nodes[this.position].ll, {icon: new greenMarker()});
+		if (this.nodes[this.position].name != null)
+				marker.bindLabel(this.nodes[this.position].name, {noHide: true});
+		this.pathlayer.addLayer(marker);
 	}
 }
 
