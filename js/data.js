@@ -53,6 +53,9 @@ function Data(map) {
 
 Data.prototype.setMode = function(m) {
 	this.mode = m;
+	this.path = null;
+	this.position = null;
+	this.targets = null;
 	this.draw();
 }
 
