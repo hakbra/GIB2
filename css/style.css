@@ -6,7 +6,10 @@ html, body, #map {
     height: 100%;
 }
 
-.ccontrol {
+ul.ui-autocomplete.ui-menu { z-index: 1000; }
+.ui-helper-hidden-accessible { display:none; }
+
+.info {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
     background: white;
@@ -15,13 +18,10 @@ html, body, #map {
     border-radius: 5px;
 }
 
-.ccontrol h4 {
+.info h4 {
     margin: 0 0 5px;
     color: #777;
 }
-
-ul.ui-autocomplete.ui-menu { z-index: 1000; }
-.ui-helper-hidden-accessible { display:none; }
 
 #dropdownWrapper {
 	position:absolute;

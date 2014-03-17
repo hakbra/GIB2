@@ -34,7 +34,7 @@ function Data(map) {
 	this.toFromMode = 1;
 	this.autocomplete = null;
 	
-	this.info = new CustomControl('info', {position:"bottomright"});
+	this.info = new CustomControl('info', {position:"bottomleft"});
 	this.map.addControl(this.info);
 
 	this.map.addControl(ButtonRow({
@@ -51,10 +51,17 @@ function Data(map) {
 	this.map.on('click', this.onClick.bind(this));
 }
 
+Data.prototype.setMode = function(m) {
+	this.mode = m;
+	this.draw();
+}
+
 Data.prototype.clearTargets = function() {
 	this.targets = null;
 	this.position = null;
 	this.path = null;
+	this.toFromMode = 1;
+	this.toggleToFrom();
 	this.makePath();
 }
 Data.prototype.toggleToFrom = function() {
@@ -109,8 +116,12 @@ Data.prototype.populateDrowdown = function() {
 	for (var i = 0; i < singleNames.length; i++)
 		singleSourcelist.push( {value: singleNames[i]["node_id"], label:singleNames[i]["value"]}); 
 
-
 	this.autocomplete = {all : sourcelist, single : singleSourcelist};
+
+	$("#search").val("Search");
+	$("#search").on("click", function() {
+		$(this).val("")
+	});
 }
 
 Data.prototype.makePath = function() {
@@ -127,39 +138,52 @@ Data.prototype.makePath = function() {
 
 Data.prototype.updateInfo = function() {
 	var node = null;
+	var html = "";
+	if (this.mode == -1) {
+		if (this.position == null && this.targets == null)
+			html = "Velg utgangspunkt og mål";
+		else if (this.position == null)
+			html = "Velg utgangspunkt";
+		else if (this.targets == null)
+			html = "Velg mål";
+		else
+			html = "Avstand: " + Math.round(this.path.dist) + "m";
+		this.info._container.innerHTML = html;
+		return;
+	} 
+
 	if (this.selectedNode == null) {
-		var html = "Velg rom";
+		html = "Velg rom";
 	} else {
 		node = this.nodes[this.selectedNode];
 
-		var html = (this.mode <= 0) ? "Ingen navn" : "Node " + this.selectedNode;
-		if (node.name != null) {
+		html = "Node " + this.selectedNode;
+		if (node.name != null) 
 			html = "<b>" + node.name + "</b>";
-		}
 		
 		if (this.mode == 1) // info mode
 			html += "<button onclick=\"addRoom("+this.selectedNode+")\">+</button>";
-
-
 		html += "<br>";
 
 		html += "<br><u>Personer:</u>";
 		if (this.mode == 1) // info mode
 			html += "<button onclick=\"addPerson("+this.selectedNode+")\">+</button>";
 
-		if (node.persons.length > 0) {
-			for (var i = 0; i < node.persons.length; i++)
-				html += "<br>" + node.persons[i];
-		}
+		for (var i = 0; i < node.persons.length; i++)
+			html += "<br>" + node.persons[i];
+		html += "<br>";
+
+		html += "<br><u>Type rom:</u>";
+		if (this.mode == 1) // info mode
+			html += "<button onclick=\"addType("+this.selectedNode+")\">+</button>";
+
+		for (var i = 0; i < node.types.length; i++)
+			html += "<br>" + node.types[i];
 	}
 
 	html += "<br><br>";
-	if (this.path != null)
-		html += "<small>avstand: " + Math.round(this.path["dist"]) + "m</small><br>";
 	if (node != null)
 		html += "<small>id: " + node.id + "</small><br>";
-	if (this.mode == 0)
-		html += "<small>mode: read</small>";		
 	if (this.mode == 1)
 		html += "<small>mode: info</small>";		
 	if (this.mode == 2)
@@ -195,6 +219,11 @@ Data.prototype.read = function() {
 	var names = getAll("SELECT node_id, value FROM property WHERE type = 'name'");
 	for (var i = 0; i < names.length; i++) {
 		this.nodes[names[i]["node_id"]].name = names[i]["value"];
+	}
+
+	var types = getAll("SELECT node_id, value FROM property WHERE type = 'type'");
+	for (var i = 0; i < types.length; i++) {
+		this.nodes[types[i]["node_id"]].types.push(types[i]["value"]);
 	}
 }
 
@@ -242,7 +271,7 @@ Data.prototype.getClosestNode = function(target, floor, limit) {
 
 Data.prototype.onClick = function(e) {
 	if (e.originalEvent.altKey && this.mode != -1) { // Change mode if not in user mode
-		this.mode = (this.mode + 1) % 3;
+		this.mode = (this.mode == 1) ? 2 : 1;
 		this.updateInfo();
 		this.draw();
 		return;
@@ -260,7 +289,7 @@ Data.prototype.onClick = function(e) {
 	var nearestNode = this.getClosestNode(e.latlng, this.floor, 1);
 	if (nearestNode != null)
 		this.selectNode(nearestNode.id);
-	else if(this.mode > 1) // Only in edit-mode
+	else if(this.mode == 2) // Only in edit-mode
 		this.addNode(e);
 }
 
@@ -314,6 +343,7 @@ Data.prototype.drawPath = function() {
 				marker.bindLabel(this.nodes[this.position].name, {noHide: true});
 		this.pathlayer.addLayer(marker);
 	}
+	this.updateInfo();
 }
 
 Data.prototype.draw = function() {
