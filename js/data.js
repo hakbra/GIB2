@@ -3,23 +3,27 @@ function addPerson(sn) {
 	if (name == null)
 		return;
 	execute("INSERT INTO property VALUES (" + sn + ", 'person', \"" + name + "\")");
+	d.reset(false);
 }
 function addRoom(sn) {
 	var name = prompt("Navn til node " + sn, "");
 	if (name == null)
 		return;
 	execute("INSERT INTO property VALUES (" + sn + ", 'name', \"" + name + "\")");
+	d.reset(false);
 }
 function addType(sn) {
 	var name = prompt("Type til node " + sn, "");
 	if (name == null)
 		return;
 	execute("INSERT INTO property VALUES (" + sn + ", 'type', \"" + name + "\")");
+	d.reset(false);
 }
 function removeNode(id) {
 	execute("DELETE FROM node WHERE id = " + id);
 	execute("DELETE FROM line WHERE node_a = " + id + " OR node_b = " + id);
 	execute("DELETE FROM property WHERE node_id = " + id);
+	d.reset(true);
 }
 
 // Data class
@@ -54,6 +58,21 @@ function Data(map) {
 	this.toggleToFrom();
 
 	this.map.on('click', this.onClick.bind(this));
+}
+
+Data.prototype.reset = function(del) {
+	this.maps = new Array();
+	this.nodes = new Object();
+	this.lines = new Array();
+	if (del)
+		this.selectedNode = null;
+	this.path = null;
+	this.position = null;
+	this.targets = null;
+	this.toFromMode = 1;
+
+	this.read();
+	this.draw();
 }
 
 Data.prototype.setMode = function(m) {
