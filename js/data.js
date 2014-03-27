@@ -8,13 +8,18 @@ function addRoom(sn) {
 	var name = prompt("Navn til node " + sn, "");
 	if (name == null)
 		return;
-	execute("INSERT INTO property VALUES (" + sn + ", 'room', \"" + name + "\")");
+	execute("INSERT INTO property VALUES (" + sn + ", 'name', \"" + name + "\")");
 }
 function addType(sn) {
 	var name = prompt("Type til node " + sn, "");
 	if (name == null)
 		return;
 	execute("INSERT INTO property VALUES (" + sn + ", 'type', \"" + name + "\")");
+}
+function removeNode(id) {
+	execute("DELETE FROM node WHERE id = " + id);
+	execute("DELETE FROM line WHERE node_a = " + id + " OR node_b = " + id);
+	execute("DELETE FROM property WHERE node_id = " + id);
 }
 
 // Data class
@@ -161,36 +166,28 @@ Data.prototype.updateInfo = function() {
 		node = this.nodes[this.selectedNode];
 
 		html = "Node " + this.selectedNode;
+		html += "<button onclick=\"removeNode("+this.selectedNode+")\">X</button><br>";
+
+		html += "<br><u>Navn:</u><br>";
 		if (node.name != null) 
-			html = "<b>" + node.name + "</b>";
-		
-		if (this.mode == 1) // info mode
+			html += node.name;
+		else if (this.mode == 1) // info mode
 			html += "<button onclick=\"addRoom("+this.selectedNode+")\">+</button>";
 		html += "<br>";
 
-		html += "<br><u>Personer:</u>";
-		if (this.mode == 1) // info mode
-			html += "<button onclick=\"addPerson("+this.selectedNode+")\">+</button>";
-
+		html += "<br><u>Personer:</u><br>";
 		for (var i = 0; i < node.persons.length; i++)
-			html += "<br>" + node.persons[i];
+			html += node.persons[i] + "<br>";
+		if (this.mode == 1) // info mode
+			html += "<button onclick=\"addPerson("+this.selectedNode+")\">+</button><br>";
 		html += "<br>";
 
-		html += "<br><u>Type rom:</u>";
+		html += "<u>Type rom:</u><br>";
+		for (var i = 0; i < node.types.length; i++)
+			html += node.types[i] + "<br>";
 		if (this.mode == 1) // info mode
 			html += "<button onclick=\"addType("+this.selectedNode+")\">+</button>";
-
-		for (var i = 0; i < node.types.length; i++)
-			html += "<br>" + node.types[i];
 	}
-
-	html += "<br><br>";
-	if (node != null)
-		html += "<small>id: " + node.id + "</small><br>";
-	if (this.mode == 1)
-		html += "<small>mode: info</small>";		
-	if (this.mode == 2)
-		html += "<small>mode: edit</small>";
 
 	this.info._container.innerHTML = html;
 }
@@ -230,7 +227,7 @@ Data.prototype.read = function() {
 	}
 }
 
-Data.prototype.selectNode = function(id) {
+Data.prototype.selectNode = function(id, shift) {
 	if (this.selectedNode == null) {
 		this.selectedNode = id;
 		this.nodes[id].marker.setIcon(greenIcon);
@@ -241,7 +238,7 @@ Data.prototype.selectNode = function(id) {
 		this.pathlayer.clearLayers();
 	}
 	else {
-		if (this.mode == 2) { // edit mode
+		if (shift) { // edit mode
 			var l = new Line(this.nodes[this.selectedNode], this.nodes[id]);
 			l.write();
 			this.lines.push(l);
@@ -273,12 +270,6 @@ Data.prototype.getClosestNode = function(target, floor, limit) {
 }
 
 Data.prototype.onClick = function(e) {
-	if (e.originalEvent.altKey && this.mode != -1) { // Change mode if not in user mode
-		this.mode = (this.mode == 1) ? 2 : 1;
-		this.updateInfo();
-		this.draw();
-		return;
-	}
 	if (this.mode == -1) {
 		var closestNode = this.getClosestNode(e.latlng, this.floor, 400);
 		if (this.toFromMode == 0)
@@ -289,11 +280,13 @@ Data.prototype.onClick = function(e) {
 		this.makePath();
 		return;
 	}
-	var nearestNode = this.getClosestNode(e.latlng, this.floor, 1);
-	if (nearestNode != null)
-		this.selectNode(nearestNode.id);
-	else if(this.mode == 2) // Only in edit-mode
+	if(e.originalEvent.altKey) {
 		this.addNode(e);
+		return;
+	}
+	var nearestNode = this.getClosestNode(e.latlng, this.floor, 100);
+	if (nearestNode != null)
+		this.selectNode(nearestNode.id, e.originalEvent.shiftKey);
 }
 
 Data.prototype.addNode = function(e) {
@@ -362,8 +355,6 @@ Data.prototype.draw = function() {
 		if (this.nodes[id].floor == this.floor) { // Only if they are on the current floor
 			this.layer.addLayer(this.nodes[id].marker);
 		}
-	if (this.mode != 2) // line mode
-		return;
 	for (var i = 0; i < this.lines.length; i++) { // Add lines
 		if (this.lines[i].a.floor == this.floor || this.lines[i].b.floor == this.floor)
 			this.lines[i].polyline.addTo(this.layer); 
