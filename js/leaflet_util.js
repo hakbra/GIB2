@@ -58,14 +58,14 @@ var greenIcon = L.icon({
 });
 var downIcon = L.icon({ 
         iconUrl: 'img/down.png',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
         popupAnchor: [0, 0],
 });
 var upIcon = L.icon({ 
         iconUrl: 'img/up.png',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
         popupAnchor: [0, 0],
 });
 var redMarker = L.Icon.Default.extend({
