@@ -19,11 +19,34 @@ function addType(sn) {
 	execute("INSERT INTO property VALUES (" + sn + ", 'type', \"" + name + "\")");
 	d.reset(false);
 }
+function delPerson(sn) {
+	execute("DELETE FROM property WHERE type = 'person' AND node_id = " + sn);
+	d.reset(false);
+}
+function delRoom(sn) {
+	execute("DELETE FROM property WHERE type = 'name' AND node_id = " + sn);
+	d.reset(false);
+}
+function delType(sn) {
+	execute("DELETE FROM property WHERE type = 'type' AND node_id = " + sn);
+	d.reset(false);
+}
 function removeNode(id) {
 	execute("DELETE FROM node WHERE id = " + id);
 	execute("DELETE FROM line WHERE node_a = " + id + " OR node_b = " + id);
 	execute("DELETE FROM property WHERE node_id = " + id);
 	d.reset(true);
+}
+function publish(id) {
+	var name = prompt("Name", "");
+	var time = parseInt(prompt("Duration (hours)", ""));
+	if (name == null || name == "" || time == null || isNaN(time) || time < 1) {
+		alert("Illegal input, position not published");
+		return;
+	}
+	execute("INSERT INTO publication VALUES (" + id + ", '" + name + "', DATE_ADD(NOW(), INTERVAL "+time+" HOUR))");
+	d.populateDropdown();
+	d.setToFrom(1);
 }
 
 // Data class
@@ -43,7 +66,7 @@ function Data(map) {
 	this.toFromMode = 1;
 	this.autocomplete = null;
 	
-	this.info = new CustomControl('info', {position:"bottomleft"});
+	this.info = new CustomControl('info', {position:"bottomright"});
 	this.map.addControl(this.info);
 
 	this.map.addControl(ButtonRow({
@@ -54,8 +77,8 @@ function Data(map) {
 	$("#toFromButton").click(this.toggleToFrom.bind(this));
 	$("#clearButton").click(this.clearTargets.bind(this));
 
-	this.populateDrowdown();
-	this.toggleToFrom();
+	this.populateDropdown();
+	this.setToFrom(0);
 
 	this.map.on('click', this.onClick.bind(this));
 }
@@ -69,8 +92,9 @@ Data.prototype.reset = function(del) {
 	this.path = null;
 	this.position = null;
 	this.targets = null;
-	this.toFromMode = 1;
 
+	this.populateDropdown();
+	this.setToFrom(0);
 	this.read();
 	this.draw();
 }
@@ -88,12 +112,18 @@ Data.prototype.clearTargets = function() {
 	this.position = null;
 	this.path = null;
 	this.toFromMode = 1;
-	this.toggleToFrom();
+	this.setToFrom(0);
 	this.makePath();
 }
 Data.prototype.toggleToFrom = function() {
+	if (this.toFromMode == 1)
+		this.setToFrom(0);
+	else
+		this.setToFrom(1);
+}
+Data.prototype.setToFrom = function(mode) {
 	var d = this;
-	if (this.toFromMode == 0) {
+	if (mode == 1) {
 		this.toFromMode = 1;
 		$("#toFromButton").css("background-color", "#FF0000");
 		$("#toFromButton").html("B");
@@ -104,7 +134,11 @@ Data.prototype.toggleToFrom = function() {
 				$("#search").val(ui.item.label);
 				d.targets = ui.item.value;
 				d.makePath();
+			},
+			focus: function( event, ui ) {
+				event.preventDefault();
 			}
+
 		});
 	} else {
 		this.toFromMode = 0;
@@ -117,12 +151,15 @@ Data.prototype.toggleToFrom = function() {
 				$("#search").val(ui.item.label);
 				d.position = ui.item.value;
 				d.makePath();
+			},
+			focus: function( event, ui ) {
+				event.preventDefault();
 			}
 		});
 	}
 }
 
-Data.prototype.populateDrowdown = function() {
+Data.prototype.populateDropdown = function() {
 	var names = getAll("SELECT value, node_id FROM property");
 	var dict = {};
 	for (var i = 0; i < names.length; i++) {
@@ -143,6 +180,12 @@ Data.prototype.populateDrowdown = function() {
 	for (var i = 0; i < singleNames.length; i++)
 		singleSourcelist.push( {value: singleNames[i]["node_id"], label:singleNames[i]["value"]}); 
 
+	var publications = getAll("SELECT node_id, name FROM publication WHERE expiration > NOW()");
+	for (var i = 0; i < publications.length; i++) {
+		singleSourcelist.push( {value: publications[i]["node_id"], label:publications[i]["name"] + " (temp.)"}); 
+		sourcelist.push( {value: publications[i]["node_id"], label:publications[i]["name"] + " (temp.)"}); 
+	}
+
 	this.autocomplete = {all : sourcelist, single : singleSourcelist};
 
 	$("#search").val("Search");
@@ -152,60 +195,71 @@ Data.prototype.populateDrowdown = function() {
 }
 
 Data.prototype.makePath = function() {
+	if (this.position != null && this.targets != null && this.targets.indexOf(this.position) > -1) {
+		this.targets = null;
+		this.path = null;
+	}
+
 	if (this.position != null && this.targets != null) {
 		this.path = shortestPath(this.nodes, this.position, this.targets);
 		this.updateInfo();
 	}
 	this.drawPath();
 	if (this.position == null && this.targets != null && this.toFromMode == 1)
-		this.toggleToFrom();
+		this.setToFrom(0);
 	if (this.position != null && this.targets == null && this.toFromMode == 0)
-		this.toggleToFrom();
+		this.setToFrom(1);
 }
 
 Data.prototype.updateInfo = function() {
 	var node = null;
-	var html = "";
+	var html = "<b>" + (this.floor+1) + ". floor</b><br>";
 	if (this.mode == -1) {
 		if (this.position == null && this.targets == null)
-			html = "Velg utgangspunkt og mål";
+			html += "Set start and destination";
 		else if (this.position == null)
-			html = "Velg utgangspunkt";
+			html += "Set start";
 		else if (this.targets == null)
-			html = "Velg mål";
+			html += "Set destination";
 		else
-			html = "Avstand: " + Math.round(this.path.dist) + "m";
+			html += "Distance: " + Math.round(this.path.dist) + "m";
+
+		if (this.position != null) {
+			html += "<br><br><button onclick=\"publish("+this.position+")\">Publish my location</button>";
+		}
+
 		this.info._container.innerHTML = html;
 		return;
 	} 
 
 	if (this.selectedNode == null) {
-		html = "Velg rom";
+		html += "Choose node";
 	} else {
 		node = this.nodes[this.selectedNode];
 
-		html = "Node " + this.selectedNode;
+		html += "Node " + this.selectedNode;
 		html += "<button onclick=\"removeNode("+this.selectedNode+")\">X</button><br>";
 
-		html += "<br><u>Navn:</u><br>";
-		if (node.name != null) 
-			html += node.name;
-		else if (this.mode == 1) // info mode
-			html += "<button onclick=\"addRoom("+this.selectedNode+")\">+</button>";
-		html += "<br>";
+		html += "<br><u>Name:</u><br>";
+		if (node.name != null)  {
+			html += "<button onclick=\"delRoom("+this.selectedNode+")\">X</button>";
+			html += node.name + "<br>";
+		}
+		html += "<button onclick=\"addRoom("+this.selectedNode+")\">+</button><br>";
 
-		html += "<br><u>Personer:</u><br>";
-		for (var i = 0; i < node.persons.length; i++)
+		html += "<br><u>Persons:</u><br>";
+		for (var i = 0; i < node.persons.length; i++) {
+			html += "<button onclick=\"delPerson("+this.selectedNode+")\">X</button>";
 			html += node.persons[i] + "<br>";
-		if (this.mode == 1) // info mode
-			html += "<button onclick=\"addPerson("+this.selectedNode+")\">+</button><br>";
-		html += "<br>";
+		}
+		html += "<button onclick=\"addPerson("+this.selectedNode+")\">+</button><br>";
 
-		html += "<u>Type rom:</u><br>";
-		for (var i = 0; i < node.types.length; i++)
+		html += "<br><u>Types:</u><br>";
+		for (var i = 0; i < node.types.length; i++) {
+			html += "<button onclick=\"delType("+this.selectedNode+")\">X</button>";
 			html += node.types[i] + "<br>";
-		if (this.mode == 1) // info mode
-			html += "<button onclick=\"addType("+this.selectedNode+")\">+</button>";
+		}
+		html += "<button onclick=\"addType("+this.selectedNode+")\">+</button>";
 	}
 
 	this.info._container.innerHTML = html;
@@ -289,6 +343,10 @@ Data.prototype.getClosestNode = function(target, floor, limit) {
 }
 
 Data.prototype.onClick = function(e) {
+	if (e.originalEvent.altKey && e.originalEvent.shiftKey) {
+		this.setMode(this.mode*-1);
+		return;
+	}
 	if (this.mode == -1) {
 		var closestNode = this.getClosestNode(e.latlng, this.floor, 400);
 		if (this.toFromMode == 0)
