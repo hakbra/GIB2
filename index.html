@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Leaflet Test</title>
+		<title>Maplet</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
@@ -48,7 +48,7 @@
 			map.addLayer(osm);
 
 			d = new Data(map);
-			d.mode = 1;
+			d.mode = -1;
 			d.read();
 			d.draw();
 
