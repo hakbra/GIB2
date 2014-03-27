@@ -57,7 +57,7 @@ var greenIcon = L.icon({
         popupAnchor: [0, 0],
 });
 var downIcon = L.icon({ 
-        iconUrl: 'img/down.gif',
+        iconUrl: 'img/down.png',
         iconSize: [20, 20],
         iconAnchor: [10, 10],
         popupAnchor: [0, 0],
