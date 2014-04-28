@@ -182,8 +182,8 @@ Data.prototype.populateDropdown = function() {
 
 	var publications = getAll("SELECT node_id, name FROM publication WHERE expiration > NOW()");
 	for (var i = 0; i < publications.length; i++) {
-		singleSourcelist.push( {value: publications[i]["node_id"], label:publications[i]["name"] + " (temp.)"}); 
-		sourcelist.push( {value: publications[i]["node_id"], label:publications[i]["name"] + " (temp.)"}); 
+		singleSourcelist.push( {value: [publications[i]["node_id"]], label:publications[i]["name"] + " (temp.)"}); 
+		sourcelist.push( {value: [publications[i]["node_id"]], label:publications[i]["name"] + " (temp.)"}); 
 	}
 
 	this.autocomplete = {all : sourcelist, single : singleSourcelist};
@@ -432,7 +432,7 @@ Data.prototype.draw = function() {
 		if (this.nodes[id].floor == this.floor) { // Only if they are on the current floor
 			this.layer.addLayer(this.nodes[id].marker);
 		}
-	for (var i = 0; i < this.lines.length; i++) { // Add lines
+	for (var i = 1; i < this.lines.length; i++) { // Add lines
 		if (this.lines[i].a.floor == this.floor || this.lines[i].b.floor == this.floor)
 			this.lines[i].polyline.addTo(this.layer); 
 	}
